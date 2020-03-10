@@ -364,7 +364,7 @@
           <div class="container">
             <div class="section__title">Закажите доставку</div>
             <div class="order__form">
-              <form class="order__form-tag" id="order-form" method="post">
+              <form class="order__form-tag" id="order-form" action="php/form.php" method="post">
                 <div class="order__form-col">
                   <div class="order__form-row order__form-row_double">
                     <label class="order__form-block">
@@ -509,29 +509,12 @@
             type: "POST",
             url: 'php/form.php',
             data: $(this).serialize(),
+            success: function (json) {
+              console.log(json);
+            }
           });
         });
       });
     </script>
-<!--    <script>-->
-<!--      const formOrder = document.querySelector('.order__form-tag');-->
-<!--      const sendOrder = document.querySelector('.submit-button');-->
-
-<!--      sendOrder.addEventListener('click', function(e) {-->
-<!--        e.preventDefault();-->
-
-<!--        const formData = new FormData(formOrder);-->
-<!--        formData.append("to", "mail@mail.com");-->
-<!--        console.log(formData);-->
-
-<!--        const xhr = new XMLHttpRequest();-->
-<!--        xhr.open('POST', 'php/form.php');-->
-<!--        xhr.responseType = "json";-->
-<!--        xhr.send(formData);-->
-<!--        console.log(xhr);-->
-
-<!--      });-->
-
-<!--    </script>-->
   </body>
 </html>
