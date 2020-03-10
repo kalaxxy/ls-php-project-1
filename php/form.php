@@ -1,5 +1,6 @@
 <?php
-//include "init.php";
+include "functions.php";
+
 try {
     $pdo = new PDO('mysql:host=localhost;dbname=db', 'root', 'root');
 } catch (PDOException $e) {
@@ -22,41 +23,34 @@ if (!empty($_POST)) {
 
     $user = authUserByEmail($email, $pdo);
 
-
-    ini_set('error_reporting', E_ALL);
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    ini_set('ignore_repeated_errors', 0);
-
-    if (!$user) {
+    // пользователь существует
+    if (empty($user['id'])) {
+        // если нет то создаём
         $insertToUsers = "INSERT INTO users (email, `name`, tel) VALUES ('$email', '$name', '$phone')";
-        $insertToOrders = "INSERT INTO orders (street, house, `block`, appt, floor, `comment`, payment, `call`) VALUES ('$street' . '$house' . '$block' . '$appt' . '$floor' . '$comment' . '$payment' . '$call')";
         $retUsers = $pdo->query($insertToUsers);
-        $retOrders = $pdo->query($insertToOrders);
+        // получаем информацию о пользователе
+        $user = authUserByEmail($email, $pdo);
+    }
+    // Добавляем заказ
+    $userId = $user['id'];
+    $insertToOrders = "INSERT INTO orders (id_user, street, house, `block`, appt, floor, `comment`, payment, `call`) VALUES ('$userId', '$street', '$house', '$block', '$appt', '$floor', '$comment', '$payment', '$call')";
+    $retOrders = $pdo->query($insertToOrders);
+
+
+    $lastOrder = getLastOrderByUserId($userId, $pdo);
+    $lastOrderId = $lastOrder['id'];
+    $countOrdersByUserId = getOrdersByUserId($userId, $pdo);
+    $dateTimeMail = date("d-m-Y-H-i");
+    echo $countOrdersByUserId;
+
+    if ($countOrdersByUserId === 1) {
+        $countOrders = "<div>Спасибо - это ваш первый заказ!</div>";
     } else {
-        $userId = $user['id'];
-//        echo $userId;
-        $insertToOrders = "INSERT INTO orders (id_user, street, house, `block`, appt, floor, `comment`, payment, `call`) VALUES ('$userId' . '$street' . '$house' . '$block' . '$appt' . '$floor' . '$comment' . '$payment' . '$call')";
-        $retOrders = $pdo->query($insertToOrders);
+        $countOrders = "<div>Спасибо! Это уже " . $countOrdersByUserId . " заказ!</div>";
     }
 
-}
+    $mailText = "<h3>Заказ №" . $lastOrderId . "</h3><div>Ваш заказ будет доставлен по адресу: ул. " . $street . "д." . $house . " корп." . $block . " кв." . $appt . " эт." . $floor . "</div><div>Вы заказали: DarkBeefBurger за 500 рублей, 1 шт</div><div>Дополнительно: " . $comment . "</div>" . $countOrders;
 
-function authUserByEmail(string $email, $pdo)
-{
-    $query = "SELECT * FROM users WHERE email = '$email' LIMIT 1";
-    $ret = $pdo->query($query);
-    $users = $ret->fetchAll();
-//    print_r($users[0]);
-    return $users[0] ?? [];
+    file_put_contents("../mail/" . $dateTimeMail . ".html", $mailText);
 }
-
-function getLastOrderByUserId(string $userId, $pdo)
-{
-    $query = "SELECT * FROM orders WHERE id_user = '$userId' ORDER BY id DESC LIMIT 1";
-    $ret = $pdo->query($query);
-    $orders = $ret->fetchAll();
-    return $orders[0] ?? [];
-}
-
 
